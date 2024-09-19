@@ -1,4 +1,4 @@
-#### EXERCISE 4, Iona's Version ####
+#### US EXERCISE, Iona's Version ####
 
 from machine import Pin, PWM
 import utime
@@ -14,7 +14,10 @@ led     = Pin(25, Pin.OUT)
 ''' Pin for Piezo '''
 piezo   = Pin(18, Pin.OUT)    # GPIO 18, pin 24
 
-def main_function():      
+
+def main_function():
+# indent here to show that this code lives within this function
+
        trigger.low()                       # set low
        utime.sleep_us(2)                   # stay at the low setting for 2 micro seconds
        trigger.high()                      # set high
@@ -22,13 +25,13 @@ def main_function():
        trigger.low()                       # set low
        
        ''' Check to see if an echo has been received or not'''
-       while echo.value() == 0:            # no echo has been heard yet
+       while echo.value() == 0:            # when no echo has been heard yet
            signaloff = utime.ticks_us()    # check the time
-       while echo.value() == 1:            # an echo has been heard
+       while echo.value() == 1:            # when an echo has been heard
            signalon = utime.ticks_us()     # check the time
            
        ''' Find out how much time has passed since we sent out the signal '''    
-       timepassed = signalon - signaloff
+       timepassed = signalon - signaloff   # calculate the difference
        
        ''' Find out the distance that is between the sensor and the reflected surface '''
        # Speed of sound in air = 342 m/s OR 0.0343 cm/s
@@ -39,16 +42,20 @@ def main_function():
        
        ''' Getting too close '''
        if distance >30:
-           led.high()
-           piezo.high()
+           led.high()                      # switch on a light
+           piezo.high()                    # switch on alarm ***** TO IMPLEMENT *****
+           
+       ''' Safe distance '''
        else:
-           led.low()
-           piezo.low()
+           led.low()                       # switch off a light
+           piezo.low()                     # witch off alarm
 
-# The indentation returning to the far left show that the while loop is finished
+# code returning to the far left indicates that the function definition is complete
 
-''' Cycle thorugh these instructions forever '''
+
+''' Cycle thorugh these instructions forever !!! '''
 while True:
        main_function()                   # go to the function we just wrote and execute that behaviour
-       utime.sleep(0.02)                 # how frequently we want to check the distance and report back to the console
+       utime.sleep(0.02)                 # sleep / "do nothing" for 0.02 seconds
+                                         # the sleep duration dictates how frequently we want to check the distance and report back to the console
 
