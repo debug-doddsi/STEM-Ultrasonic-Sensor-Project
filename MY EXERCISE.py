@@ -1,86 +1,54 @@
-#### Iona's EXERCISE
-from   machine import Pin, PWM
-from   time    import sleep
-import utime   as clocktool
+#### EXERCISE 4, Iona's Version ####
 
-''' Pins for sensor '''
-trigger = Pin(3, Pin.OUT)   # this pin sends out information
-echo    = Pin(2, Pin.IN)    # this pin takes in information
+from machine import Pin, PWM
+import utime
 
-''' Pin for On-board LED '''
-led = Pin(25, Pin.OUT)
-pwm = PWM(Pin(15))
-pwm.freq(1000)
 
-'''PWM Info'''
-duty = 0
-maxDuty = 65025
-maxDist = 5
+''' Pins for HC-SR04 sensor '''
+trigger = Pin(14, Pin.OUT)     # GPIO 14, pin 19
+echo    = Pin(15, Pin.IN)      # GPIO 15, pin 20
 
-''' Main method for sensor '''
-def main_function():
-    
-   ''' Turn on LED'''
-   led.high()                          # this lets us know the main function has been accessed
+''' Pin for RPi's On-board LED '''
+led     = Pin(25, Pin.OUT)
 
-   '''Create a sin wave on the Trigger pin'''
-   triggerON = clocktool.ticks_us()    # find out the time that this line was executed
-   trigger.low()                       # switch off 
-   clocktool.sleep_us(10)              # remain at this state for 10 micro seconds
-   trigger.high()                      # switch on
-   clocktool.sleep_us(10)              # remain at this state for 10 micro seconds
-   trigger.low()                       # switch off 
-   triggerOFF = clocktool.ticks_us()   # find out the time that this step was executed
-   
-   duration  = triggerOFF-triggerON    # this will let us know the time taekn to complete our square wave
-   
-   signalOFF = triggerOFF              # take a copy of the time that the signal was turned off
-   signalON  = triggerOFF              # this number is saved into 2 locations as a starting point for other measurements
+''' Pin for Piezo '''
+piezo   = Pin(18, Pin.OUT)    # GPIO 18, pin 24
 
-   while ( (echo.value() == 0) and (clocktool.ticks_diff(clocktool.ticks_us(), triggerOFF) < 25000) ): # if an echo is not being received for a duration of 
-      signalOFF = clocktool.ticks_us()
-   
-   while ( (echo.value() == 1) and (clocktool.ticks_diff(clocktool.ticks_us(), signalOFF) < 25000) ):
-      signalON = clocktool.ticks_us()
-   
-   ''' Get the time between signal sent and received '''
-   timepassed = clocktool.ticks_diff(signalON, signalOFF)
-
-   ''' Calculate the distance '''
-   distance = (timepassed * 0.0343) / 2
-
-   ''' Turn LED off '''
-   led.low()
-
-   ''' Show the answer on the screen '''
-   print("The distance from object is ", distance, "cm")
-
-   
-   if distance < maxDist :
-       percentage = (distance / maxDist) / 100
-       print (percentage)
+def main_function():      
+       trigger.low()                       # set low
+       utime.sleep_us(2)                   # stay at the low setting for 2 micro seconds
+       trigger.high()                      # set high
+       utime.sleep_us(5)                   # stay at the high setting for 5 micro seconds
+       trigger.low()                       # set low
        
-       duty = percentage * maxDist
-        
-   elif distance >= maxDist:
-       duty = maxDuty
+       ''' Check to see if an echo has been received or not'''
+       while echo.value() == 0:            # no echo has been heard yet
+           signaloff = utime.ticks_us()    # check the time
+       while echo.value() == 1:            # an echo has been heard
+           signalon = utime.ticks_us()     # check the time
+           
+       ''' Find out how much time has passed since we sent out the signal '''    
+       timepassed = signalon - signaloff
+       
+       ''' Find out the distance that is between the sensor and the reflected surface '''
+       # Speed of sound in air = 342 m/s OR 0.0343 cm/s
+       distance = (timepassed * 0.0343) / 2       
+       
+       ''' Print the distance to the console for us to see'''
+       print (0, "Distance (cm) :", distance, 30 )
+       
+       ''' Getting too close '''
+       if distance >30:
+           led.high()
+           piezo.high()
+       else:
+           led.low()
+           piezo.low()
 
-   if duty >= 0:
-       pwm.duty_u16(int(duty))
+# The indentation returning to the far left show that the while loop is finished
 
-try:
-   ''' Repeat code in a loop'''
-   while True:
-      ''' Turn sensors switch on high '''
+''' Cycle thorugh these instructions forever '''
+while True:
+       main_function()                   # go to the function we just wrote and execute that behaviour
+       utime.sleep(0.02)                 # how frequently we want to check the distance and report back to the console
 
-      ''' Look for objects '''
-      main_function()
-      
-      ''' Stop code for a second so it doesnt miss anything '''
-      clocktool.sleep(0.5)
-
-finally:
-   ''' When code is turned off, switch everything off '''
-   vcc.low()
-   trigger.low()
-   led.low()
